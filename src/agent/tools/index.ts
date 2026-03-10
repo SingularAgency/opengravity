@@ -19,6 +19,11 @@ import {
   searchWebFn,
 } from "./web_search.js";
 
+import {
+  queryMeetingsDef,
+  queryMeetingsFn,
+} from "./read_ai_query.js";
+
 // Tool definition to send to the LLM
 export const toolsDefinition = [
   getCurrentTimeDef,
@@ -28,6 +33,7 @@ export const toolsDefinition = [
   getSkillDef,
   installSkillDef,
   searchWebDef,
+  queryMeetingsDef,
 ];
 
 // Map of tool names to their execution functions
@@ -42,6 +48,7 @@ export const toolsExecutor: Record<
   get_skill: getSkillFn,
   install_skill: installSkillFn,
   search_web: searchWebFn,
+  query_meetings: queryMeetingsFn,
 };
 
 

@@ -1,8 +1,12 @@
 import { bot } from "./bot/telegram.js";
 import "./memory/db.js"; // This initializes Firebase admin
+import { startWebhookServer } from "./services/webhook.service.js";
 
 async function main() {
   console.log("Starting OpenGravity...");
+
+  console.log("Starting Webhook server...");
+  startWebhookServer();
 
   console.log("Starting Telegram Bot long polling...");
   bot.start({
