@@ -1,21 +1,41 @@
 import admin from "firebase-admin";
+import fs from "fs";
 import { env } from "../config/env.js";
 
 // Initialize Firebase Admin
 let credential;
+const credPath = env.GOOGLE_APPLICATION_CREDENTIALS;
+
 if (env.GOOGLE_CREDENTIALS_JSON) {
   try {
     const serviceAccount = JSON.parse(env.GOOGLE_CREDENTIALS_JSON);
     credential = admin.credential.cert(serviceAccount);
+    console.log("[Firebase] Initialized using GOOGLE_CREDENTIALS_JSON env var");
   } catch (err) {
-    console.error("Error parsing GOOGLE_CREDENTIALS_JSON env var. Falling back to file.");
-    credential = admin.credential.cert(env.GOOGLE_APPLICATION_CREDENTIALS);
+    console.error("[Firebase] Error parsing GOOGLE_CREDENTIALS_JSON:", err);
   }
-} else {
-  credential = admin.credential.cert(env.GOOGLE_APPLICATION_CREDENTIALS);
 }
 
-admin.initializeApp({ credential });
+if (!credential) {
+  // Check if file exists and is NOT a directory (Docker often creates directories for missing volumes)
+  if (fs.existsSync(credPath) && !fs.lstatSync(credPath).isDirectory()) {
+    credential = admin.credential.cert(credPath);
+    console.log(`[Firebase] Initialized using file: ${credPath}`);
+  } else {
+    console.warn(`[Firebase] Credential file not found or is a directory: ${credPath}`);
+    // If no credentials found, let admin try default (might fail if not in GCP, but cleaner)
+    try {
+      credential = admin.credential.applicationDefault();
+      console.log("[Firebase] Initialized using Application Default Credentials");
+    } catch (e) {
+      console.error("[Firebase] Could not initialize any credentials. The bot will likely fail.");
+    }
+  }
+}
+
+admin.initializeApp({
+  credential
+});
 
 const db = admin.firestore();
 
