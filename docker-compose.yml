@@ -1,6 +1,7 @@
 services:
   opengravity:
     build: .
+    image: opengravity:latest
     container_name: opengravity-bot
     restart: always
     env_file:
