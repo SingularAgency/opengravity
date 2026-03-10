@@ -1,0 +1,16 @@
+services:
+  opengravity:
+    build: .
+    container_name: opengravity-bot
+    restart: always
+    env_file:
+      - .env
+    volumes:
+      - ./memory.db:/app/memory.db
+      - ./service-account.json:/app/service-account.json
+      - ./temp_audio:/app/temp_audio
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10mb"
+        max-file: "3"
