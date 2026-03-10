@@ -1,24 +1,40 @@
-# Use a lightweight Node.js image
-FROM node:22-slim
+# Stage 1: Build stage
+FROM node:22-slim AS builder
 
-# Create and define the working directory
 WORKDIR /app
 
-# Copy package files and install dependencies
+# Copy configuration files
 COPY package*.json ./
-RUN npm install --production
+COPY tsconfig.json ./
 
-# Copy the rest of the application code
-COPY . .
+# Install ALL dependencies (including typescript for building)
+RUN npm install
 
-# Build the TypeScript project
+# Copy source code
+COPY src ./src
+
+# Build the TypeScript project into /app/dist
 RUN npm run build
 
-# Ensure the temp_audio directory exists for TTS/Voice processing
+# Stage 2: Runtime stage
+FROM node:22-slim
+
+WORKDIR /app
+
+# Copy only production dependency files
+COPY package*.json ./
+
+# Install ONLY production dependencies
+RUN npm install --production
+
+# Copy compiled code from builder
+COPY --from=builder /app/dist ./dist
+
+# Ensure the temp_audio directory exists for TTS processing
 RUN mkdir -p temp_audio
 
 # Set environment to production
 ENV NODE_ENV=production
 
-# Start the application
-CMD ["npm", "run", "dev"]
+# Start the application using node dist/index.js
+CMD ["npm", "start"]
