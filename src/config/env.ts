@@ -21,6 +21,7 @@ export const env = {
   OPENROUTER_API_KEY: getEnvVar("OPENROUTER_API_KEY", ""),
   OPENROUTER_MODEL: getEnvVar("OPENROUTER_MODEL", "openrouter/auto"),
   GOOGLE_APPLICATION_CREDENTIALS: getEnvVar("GOOGLE_APPLICATION_CREDENTIALS", "./service-account.json"),
+  GOOGLE_CREDENTIALS_JSON: getEnvVar("GOOGLE_CREDENTIALS_JSON", ""),
   ELEVENLABS_API_KEY: getEnvVar("ELEVENLABS_API_KEY", ""),
   ELEVENLABS_VOICE_ID: getEnvVar("ELEVENLABS_VOICE_ID", "9bwMQmoS2uNoM99shO4f"), // Default: Aria (Multilingual & Latin Spanish focus)
   TAVILY_API_KEY: getEnvVar("TAVILY_API_KEY", ""),

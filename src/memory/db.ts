@@ -2,9 +2,20 @@ import admin from "firebase-admin";
 import { env } from "../config/env.js";
 
 // Initialize Firebase Admin
-admin.initializeApp({
-  credential: admin.credential.cert(env.GOOGLE_APPLICATION_CREDENTIALS)
-});
+let credential;
+if (env.GOOGLE_CREDENTIALS_JSON) {
+  try {
+    const serviceAccount = JSON.parse(env.GOOGLE_CREDENTIALS_JSON);
+    credential = admin.credential.cert(serviceAccount);
+  } catch (err) {
+    console.error("Error parsing GOOGLE_CREDENTIALS_JSON env var. Falling back to file.");
+    credential = admin.credential.cert(env.GOOGLE_APPLICATION_CREDENTIALS);
+  }
+} else {
+  credential = admin.credential.cert(env.GOOGLE_APPLICATION_CREDENTIALS);
+}
+
+admin.initializeApp({ credential });
 
 const db = admin.firestore();
 
