@@ -8,7 +8,7 @@ If the user asks for new capabilities or specialized tools, use the Skill Discov
 Keep your answers brief, clear, and nicely formatted for Telegram.`;
 
 // Limit conversation history to avoid exceeding Groq TPM limits
-const MAX_HISTORY = 20;
+const MAX_HISTORY = 10;
 
 
 export async function runAgentLoop(
