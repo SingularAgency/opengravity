@@ -5,6 +5,16 @@ import { processMeeting } from "./meeting-processor.js";
 const app = express();
 app.use(express.json());
 
+// Root test endpoint
+app.get("/", (req, res) => {
+  res.send("OpenGravity Webhook Server is ONLINE");
+});
+
+// GET handler for testing the webhook URL in browser
+app.get("/webhooks/read-ai", (req, res) => {
+  res.send("OpenGravity Webhook Endpoint is READY (Use POST for Read AI)");
+});
+
 // Main webhook endpoint
 app.post("/webhooks/read-ai", async (req, res) => {
   console.log("[Webhook] Received request from Read AI");
