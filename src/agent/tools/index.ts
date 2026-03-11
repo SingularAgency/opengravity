@@ -24,6 +24,13 @@ import {
   queryMeetingsFn,
 } from "./read_ai_query.js";
 
+import {
+  slackListChannelsDef,
+  slackListChannelsFn,
+  slackReadMessagesDef,
+  slackReadMessagesFn,
+} from "./slack.js";
+
 // Tool definition to send to the LLM
 export const toolsDefinition = [
   getCurrentTimeDef,
@@ -34,6 +41,8 @@ export const toolsDefinition = [
   installSkillDef,
   searchWebDef,
   queryMeetingsDef,
+  slackListChannelsDef,
+  slackReadMessagesDef,
 ];
 
 // Map of tool names to their execution functions
@@ -49,6 +58,8 @@ export const toolsExecutor: Record<
   install_skill: installSkillFn,
   search_web: searchWebFn,
   query_meetings: queryMeetingsFn,
+  slack_list_channels: slackListChannelsFn,
+  slack_read_messages: slackReadMessagesFn,
 };
 
 

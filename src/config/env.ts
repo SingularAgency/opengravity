@@ -26,4 +26,5 @@ export const env = {
   ELEVENLABS_VOICE_ID: getEnvVar("ELEVENLABS_VOICE_ID", "9bwMQmoS2uNoM99shO4f"), // Default: Aria (Multilingual & Latin Spanish focus)
   TAVILY_API_KEY: getEnvVar("TAVILY_API_KEY", ""),
   PORT: parseInt(getEnvVar("PORT", "3000"), 10),
+  SLACK_BOT_TOKEN: getEnvVar("SLACK_BOT_TOKEN", ""),
 };
