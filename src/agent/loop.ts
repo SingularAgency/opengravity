@@ -9,6 +9,24 @@ Keep your answers brief, clear, and nicely formatted for Telegram.`;
 
 // Limit conversation history to avoid exceeding Groq TPM limits
 const MAX_HISTORY = 10;
+// Max characters per tool result in history (prevents huge email/calendar dumps)
+const MAX_TOOL_RESULT_CHARS = 800;
+
+/**
+ * Truncates tool result content in history to keep token usage under control.
+ * Full results are still stored in DB; only the LLM context is trimmed.
+ */
+function truncateHistory(messages: any[]): any[] {
+  return messages.map((msg) => {
+    if (msg.role === "tool" && typeof msg.content === "string" && msg.content.length > MAX_TOOL_RESULT_CHARS) {
+      return {
+        ...msg,
+        content: msg.content.slice(0, MAX_TOOL_RESULT_CHARS) + `\n...[truncado, ${msg.content.length - MAX_TOOL_RESULT_CHARS} caracteres omitidos]`,
+      };
+    }
+    return msg;
+  });
+}
 
 
 export async function runAgentLoop(
@@ -30,7 +48,7 @@ export async function runAgentLoop(
     const recentMessages = dbMessages.slice(-MAX_HISTORY);
     const messages = [
       { role: "system", content: SYSTEM_PROMPT },
-      ...recentMessages,
+      ...truncateHistory(recentMessages),
     ];
 
     // 3. Call LLM
