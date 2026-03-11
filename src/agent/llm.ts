@@ -5,7 +5,7 @@ import { env } from "../config/env.js";
 import { toolsDefinition } from "./tools/index.js";
 
 const groq = new Groq({ apiKey: env.GROQ_API_KEY });
-const groqModel = "llama-3.1-8b-instant"; // 30k TPM vs 12k for 70b on free tier
+const groqModel = "llama-3.3-70b-versatile"; // 8b failed at complex tool calls
 
 // Call OpenRouter via standard fetch
 async function generateWithOpenRouter(messages: any[]) {
