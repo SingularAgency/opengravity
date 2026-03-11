@@ -2,30 +2,36 @@ import { slackService } from "../../services/slack.js";
 
 // Tool definitions
 export const slackListChannelsDef = {
-  name: "slack_list_channels",
-  description: "Lists all Slack channels (public and private) that the bot has access to.",
-  parameters: {
-    type: "object",
-    properties: {},
+  type: "function" as const,
+  function: {
+    name: "slack_list_channels",
+    description: "Lists all Slack channels (public and private) that the bot has access to.",
+    parameters: {
+      type: "object",
+      properties: {},
+    },
   },
 };
 
 export const slackReadMessagesDef = {
-  name: "slack_read_messages",
-  description: "Reads the most recent messages from a specific Slack channel to understand conversation context.",
-  parameters: {
-    type: "object",
-    properties: {
-      channel_id: {
-        type: "string",
-        description: "The ID of the Slack channel (e.g., 'C12345678').",
+  type: "function" as const,
+  function: {
+    name: "slack_read_messages",
+    description: "Reads the most recent messages from a specific Slack channel to understand conversation context.",
+    parameters: {
+      type: "object",
+      properties: {
+        channel_id: {
+          type: "string",
+          description: "The ID of the Slack channel (e.g., 'C12345678').",
+        },
+        limit: {
+          type: "number",
+          description: "The number of messages to retrieve (default is 20).",
+        },
       },
-      limit: {
-        type: "number",
-        description: "The number of messages to retrieve (default is 20).",
-      },
+      required: ["channel_id"],
     },
-    required: ["channel_id"],
   },
 };
 
