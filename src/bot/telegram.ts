@@ -2,7 +2,7 @@ import { Bot, Context, InputFile } from "grammy";
 import { hydrateFiles } from "@grammyjs/files";
 import { env } from "../config/env.js";
 import { getOrCreateConversation } from "../memory/db.js";
-import { runAgentLoop } from "../agent/loop.js";
+import { runAgentLoopSafe } from "../agent/loop.js";
 import { transcribeAudio } from "../agent/llm.js";
 import { textToSpeech } from "../agent/tts.js";
 import fs from "fs";
@@ -36,7 +36,7 @@ bot.use(async (ctx: Context, next) => {
 async function handleResponse(ctx: Context, inputText: string, useVoice: boolean = false) {
   const userId = ctx.from!.id;
   const conversationId = await getOrCreateConversation(userId);
-  const response = await runAgentLoop(conversationId, inputText);
+  const response = await runAgentLoopSafe(conversationId, inputText);
 
   if (useVoice && env.ELEVENLABS_API_KEY) {
     try {

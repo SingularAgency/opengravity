@@ -7,6 +7,9 @@ You have access to tools, including Google Workspace (Gmail, Calendar) and Skill
 If the user asks for new capabilities or specialized tools, use the Skill Discovery tools (search_skills, get_skill, install_skill) to find and "learn" them.
 Keep your answers brief, clear, and nicely formatted for Telegram.`;
 
+// Limit conversation history to avoid exceeding Groq TPM limits
+const MAX_HISTORY = 20;
+
 
 export async function runAgentLoop(
   conversationId: string,
@@ -22,11 +25,12 @@ export async function runAgentLoop(
   while (iteration < maxIterations) {
     iteration++;
 
-    // 2. Load context
+    // 2. Load context (limit history to avoid TPM limits)
     const dbMessages = await getMessages(conversationId);
+    const recentMessages = dbMessages.slice(-MAX_HISTORY);
     const messages = [
       { role: "system", content: SYSTEM_PROMPT },
-      ...dbMessages,
+      ...recentMessages,
     ];
 
     // 3. Call LLM
@@ -80,4 +84,18 @@ export async function runAgentLoop(
   }
 
   return "I reached my iteration limit while trying to fulfill your request.";
+}
+
+export async function runAgentLoopSafe(
+  conversationId: string,
+  userMessage: string
+): Promise<string> {
+  try {
+    return await runAgentLoop(conversationId, userMessage);
+  } catch (error: any) {
+    if (error?.status === 413 || error?.message?.includes('rate_limit_exceeded') || error?.message?.includes('Request too large')) {
+      return "⚠️ El mensaje es demasiado largo para procesar en este momento. Por favor, intenta con una pregunta más corta o espera un momento e intenta de nuevo.";
+    }
+    throw error;
+  }
 }
