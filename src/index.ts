@@ -10,6 +10,7 @@ async function main() {
 
   console.log("Starting Telegram Bot long polling...");
   bot.start({
+    drop_pending_updates: true, // Ignore messages queued while bot was offline
     onStart: (botInfo) => {
       console.log(`Bot started successfully as @${botInfo.username}`);
     },
