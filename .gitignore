@@ -70,6 +70,8 @@ node_modules/
 
 # Google Cloud credentials
 service-account.json
+credentials.json
+token.json
 
 # Local SQLite database
 memory.db

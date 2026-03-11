@@ -9,6 +9,8 @@ services:
     volumes:
       - ./memory.db:/app/memory.db
       - ./temp_audio:/app/temp_audio
+      - ./credentials.json:/app/credentials.json
+      - ./token.json:/app/token.json
     logging:
       driver: "json-file"
       options:
