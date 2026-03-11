@@ -17,16 +17,16 @@ app.get("/webhooks/read-ai", (req, res) => {
 
 // Main webhook endpoint
 app.post("/webhooks/read-ai", async (req, res) => {
-  console.log("[Webhook] Received request from Read AI");
+  console.log("[Webhook] Received POST request from Read AI");
+  console.log("[Webhook] Payload:", JSON.stringify(req.body, null, 2));
   
   try {
     const meetingData = req.body;
     
     // Read AI webhook structure usually contains the report in the body
-    // We expect fields like id, title, summary, transcript, action_items
     if (!meetingData || !meetingData.id) {
-      console.warn("[Webhook] Invalid payload received:", meetingData);
-      return res.status(400).send("Invalid payload");
+      console.warn("[Webhook] Potential test request or invalid payload (No ID)");
+      return res.status(200).send("Webhook endpoint reachable (Test/Handshake OK)");
     }
 
     // Process meeting in the background (or await if you want to respond later, 
