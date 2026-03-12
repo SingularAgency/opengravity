@@ -25,12 +25,19 @@ export const slackReadMessagesDef = {
           type: "string",
           description: "The ID of the Slack channel (e.g., 'C12345678').",
         },
+        channel_name: {
+          type: "string",
+          description: "The human-readable name of the channel (e.g., 'general' or '#general').",
+        },
         limit: {
           type: "number",
           description: "The number of messages to retrieve (default is 20).",
         },
       },
-      required: ["channel_id"],
+      oneOf: [
+        { required: ["channel_id"] },
+        { required: ["channel_name"] },
+      ],
     },
   },
 };
@@ -51,16 +58,20 @@ export const slackListChannelsFn = async () => {
   }
 };
 
-export const slackReadMessagesFn = async (args: { channel_id: string; limit?: number }) => {
+export const slackReadMessagesFn = async (args: { channel_id?: string; channel_name?: string; limit?: number }) => {
   try {
-    const messages = await slackService.getChannelHistory(args.channel_id, args.limit);
-    if (messages.length === 0) {
+    const identifier = args.channel_id || args.channel_name;
+    if (!identifier) {
+      return "Debes indicar un channel_id o channel_name para leer mensajes.";
+    }
+
+    const history = await slackService.getChannelHistory(identifier, args.limit);
+    if (history.messages.length === 0) {
       return "No messages found in this channel.";
     }
-    const formattedMessages = messages
-      .map((m) => `[${m.user}]: ${m.text}`)
-      .join("\n");
-    return `Recent messages in channel ${args.channel_id}:\n${formattedMessages}`;
+    const formattedMessages = history.messages.map((m) => `[${m.user}]: ${m.text}`).join("\n");
+    const channelLabel = history.channelName ? `${history.channelName} (${history.channelId})` : history.channelId;
+    return `Recent messages in channel ${channelLabel}:\n${formattedMessages}`;
   } catch (error: any) {
     return `Error reading Slack messages: ${error.message}`;
   }
