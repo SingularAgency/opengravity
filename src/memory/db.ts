@@ -3,7 +3,7 @@ import fs from "fs";
 import { env } from "../config/env.js";
 
 // Initialize Firebase Admin
-let credential;
+let credential: admin.credential.Credential | null = null;
 const credPath = env.GOOGLE_APPLICATION_CREDENTIALS;
 
 if (env.GOOGLE_CREDENTIALS_JSON) {
@@ -31,6 +31,10 @@ if (!credential) {
       console.error("[Firebase] Could not initialize any credentials. The bot will likely fail.");
     }
   }
+}
+
+if (!credential) {
+  throw new Error("[Firebase] No credentials available. Set GOOGLE_CREDENTIALS_JSON or mount the service-account.json file.");
 }
 
 admin.initializeApp({

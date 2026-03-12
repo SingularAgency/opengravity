@@ -11,6 +11,7 @@ services:
     volumes:
       - ./memory.db:/app/memory.db
       - ./temp_audio:/app/temp_audio
+      - ./service-account.json:/app/service-account.json
       - ./credentials.json:/app/credentials.json
       - ./token.json:/app/token.json
     logging:
