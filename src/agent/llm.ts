@@ -8,7 +8,7 @@ const groq = new Groq({ apiKey: env.GROQ_API_KEY });
 const groqModel = "llama-3.3-70b-versatile"; // 8b failed at complex tool calls
 
 // Call OpenRouter via standard fetch
-async function generateWithOpenRouter(messages: any[]) {
+async function generateWithOpenRouter(messages: any[], tools?: any[]) {
   if (!env.OPENROUTER_API_KEY) {
     throw new Error("OpenRouter fallback triggered but no API key configured");
   }
@@ -24,7 +24,7 @@ async function generateWithOpenRouter(messages: any[]) {
     body: JSON.stringify({
       model: env.OPENROUTER_MODEL,
       messages: messages,
-      tools: toolsDefinition,
+      tools,
     }),
   });
 
@@ -36,21 +36,30 @@ async function generateWithOpenRouter(messages: any[]) {
   return response.json();
 }
 
-export async function generateResponse(messages: any[]) {
+export async function generateResponse(
+  messages: any[],
+  options?: { disableTools?: boolean }
+) {
   try {
-    // Try Groq as the primary LLM
-    const completion = await groq.chat.completions.create({
+    const completionRequest: any = {
       messages: messages as any[],
       model: groqModel,
-      tools: toolsDefinition as any[],
-    });
+    };
+
+    if (!options?.disableTools) {
+      completionRequest.tools = toolsDefinition as any[];
+    }
+
+    // Try Groq as the primary LLM
+    const completion = await groq.chat.completions.create(completionRequest);
 
     return completion;
   } catch (error: any) {
     console.warn("Groq API error. Falling back to OpenRouter:", error.message);
     try {
       // Fallback
-      return await generateWithOpenRouter(messages);
+      const tools = options?.disableTools ? undefined : (toolsDefinition as any[]);
+      return await generateWithOpenRouter(messages, tools);
     } catch (fallbackError: any) {
       console.error("Fallback error:", fallbackError);
       throw error; // Throw the original error or the combined error

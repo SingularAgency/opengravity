@@ -61,7 +61,7 @@ export async function processMeeting(meetingData: ReadAIMeeting) {
       },
     ];
 
-    const categoryResponse = await generateResponse(categoryPrompt);
+    const categoryResponse = await generateResponse(categoryPrompt, { disableTools: true });
     const category = categoryResponse.choices[0].message.content.trim();
 
     const actionItems = normalizeActionItems(meetingData.action_items);
