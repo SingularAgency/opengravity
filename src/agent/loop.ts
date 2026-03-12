@@ -13,6 +13,26 @@ const MAX_HISTORY = 10;
 const MAX_TOOL_RESULT_CHARS = 800;
 
 /**
+ * Some LLMs return tool calls in a non-standard XML format like:
+ *   <function=tool_name({"arg": "value"})>
+ * This parser detects that and converts it to the standard tool_calls format.
+ */
+function parseXmlStyleToolCalls(content: string): any[] | null {
+  const xmlToolCallRegex = /<function=(\w+)\((\{.*?\})\)>/gs;
+  const matches = [...content.matchAll(xmlToolCallRegex)];
+  if (matches.length === 0) return null;
+
+  return matches.map((match, index) => ({
+    id: `call_xml_${index}`,
+    type: "function",
+    function: {
+      name: match[1],
+      arguments: match[2],
+    },
+  }));
+}
+
+/**
  * Truncates tool result content in history to keep token usage under control.
  * Full results are still stored in DB; only the LLM context is trimmed.
  */
@@ -60,13 +80,25 @@ export async function runAgentLoop(
       throw new Error("No message returned from LLM");
     }
 
-    // 4. Check for tool calls
-    if (responseMessage.tool_calls && responseMessage.tool_calls.length > 0) {
+    // 4. Check for tool calls (standard format or XML fallback format)
+    // Some OpenRouter models return tool calls as XML: <function=name({...})>
+    let toolCalls = responseMessage.tool_calls;
+    if ((!toolCalls || toolCalls.length === 0) && responseMessage.content) {
+      const xmlParsed = parseXmlStyleToolCalls(responseMessage.content);
+      if (xmlParsed && xmlParsed.length > 0) {
+        console.warn("[Agent] Detected XML-style tool calls, converting to standard format.");
+        toolCalls = xmlParsed;
+        responseMessage.tool_calls = toolCalls;
+        responseMessage.content = null; // Treat as a pure tool call message
+      }
+    }
+
+    if (toolCalls && toolCalls.length > 0) {
       // Save the assistant's tool calls to DB
       await addMessage(conversationId, "assistant", responseMessage);
 
       // Execute each tool
-      for (const toolCall of responseMessage.tool_calls) {
+      for (const toolCall of toolCalls) {
         const functionName = toolCall.function.name;
         const functionArgs = JSON.parse(toolCall.function.arguments || "{}");
 
