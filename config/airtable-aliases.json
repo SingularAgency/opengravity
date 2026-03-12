@@ -1,0 +1,13 @@
+{
+  "default": {
+    "tables": {
+      "proyectos": {
+        "name": "Projects",
+        "fields": {
+          "nombre del proyecto": "Project Name",
+          "estado": "Status"
+        }
+      }
+    }
+  }
+}

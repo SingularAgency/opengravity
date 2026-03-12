@@ -30,7 +30,20 @@ import {
   slackReadMessagesDef,
   slackReadMessagesFn,
 } from "./slack.js";
-import { airtableQueryDef, airtableQueryFn, airtableListSchemaDef, airtableListSchemaFn } from "./airtable.js";
+import {
+  airtableQueryDef,
+  airtableQueryFn,
+  airtableListSchemaDef,
+  airtableListSchemaFn,
+  airtableListBasesDef,
+  airtableListBasesFn,
+  airtableCreateRecordDef,
+  airtableCreateRecordFn,
+  airtableUpdateRecordDef,
+  airtableUpdateRecordFn,
+  airtableBatchCreateDef,
+  airtableBatchCreateFn,
+} from "./airtable.js";
 
 // Tool definition to send to the LLM
 export const toolsDefinition = [
@@ -46,6 +59,10 @@ export const toolsDefinition = [
   slackReadMessagesDef,
   airtableQueryDef,
   airtableListSchemaDef,
+  airtableListBasesDef,
+  airtableCreateRecordDef,
+  airtableUpdateRecordDef,
+  airtableBatchCreateDef,
 ];
 
 // Map of tool names to their execution functions
@@ -65,4 +82,8 @@ export const toolsExecutor: Record<
   slack_read_messages: slackReadMessagesFn,
   airtable_query_records: airtableQueryFn,
   airtable_list_schema: airtableListSchemaFn,
+  airtable_list_bases: airtableListBasesFn,
+  airtable_create_record: airtableCreateRecordFn,
+  airtable_update_record: airtableUpdateRecordFn,
+  airtable_batch_create: airtableBatchCreateFn,
 };

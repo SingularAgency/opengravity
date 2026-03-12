@@ -44,7 +44,10 @@ An executive briefing and lightweight PRD for prospective leads evaluating a bes
 - **Google Workspace:** OAuth desktop flow using `@google-cloud/local-auth`; supports Gmail list/read and Calendar agenda queries.
 - **Slack:** `SlackService` leverages `conversations.list`/`history` and resolves user IDs; tools allow leads to ask “¿Qué se habló en #ventas?” from Telegram.
 - **Airtable:** Native REST integration pulls filtered records from any base/table so the agent can surface CRM-style rows (“muéstrame los deals activos”) directamente en Telegram.
-  - Incluye tool de esquema para listar tablas/campos y reintentos automáticos cuando se mencionan campos inexistentes.
+  - Incluye tools para listar bases, tablas y campos (`airtable_list_bases`, `airtable_list_schema`) y reintentos automáticos cuando se mencionan columnas inexistentes.
+  - Soporta alias configurables (`config/airtable-aliases.json`) para mapear nombres coloquiales (“nombre del proyecto”) a columnas reales.
+  - Permite operaciones seguras de escritura (`airtable_create_record`, `airtable_update_record`, `airtable_batch_create`) que requieren confirmación explícita y respetan scopes `data.records:write`.
+  - Los resultados se devuelven en tablas ASCII compactas para facilitar la lectura en Telegram/CLI.
 - **Web Search:** Tavily-backed `search_web` keeps responses grounded with live sources.
 - **Skill System:** Bridges to prompts.chat marketplace—agent can search, fetch, and install new skills without redeploying the core.
 
