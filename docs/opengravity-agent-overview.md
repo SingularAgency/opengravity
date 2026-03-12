@@ -43,6 +43,7 @@ An executive briefing and lightweight PRD for prospective leads evaluating a bes
 ### 3.4 Productivity Integrations
 - **Google Workspace:** OAuth desktop flow using `@google-cloud/local-auth`; supports Gmail list/read and Calendar agenda queries.
 - **Slack:** `SlackService` leverages `conversations.list`/`history` and resolves user IDs; tools allow leads to ask “¿Qué se habló en #ventas?” from Telegram.
+- **Airtable:** Native REST integration pulls filtered records from any base/table so the agent can surface CRM-style rows (“muéstrame los deals activos”) directamente en Telegram.
 - **Web Search:** Tavily-backed `search_web` keeps responses grounded with live sources.
 - **Skill System:** Bridges to prompts.chat marketplace—agent can search, fetch, and install new skills without redeploying the core.
 

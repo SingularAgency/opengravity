@@ -27,4 +27,6 @@ export const env = {
   TAVILY_API_KEY: getEnvVar("TAVILY_API_KEY", ""),
   PORT: parseInt(getEnvVar("PORT", "3000"), 10),
   SLACK_BOT_TOKEN: getEnvVar("SLACK_BOT_TOKEN", ""),
+  AIRTABLE_API_KEY: getEnvVar("AIRTABLE_API_KEY", ""),
+  AIRTABLE_BASE_ID: getEnvVar("AIRTABLE_BASE_ID", ""),
 };
