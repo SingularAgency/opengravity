@@ -1,6 +1,6 @@
 import express from "express";
 import { env } from "../config/env.js";
-import { processMeeting } from "./meeting-processor.js";
+import { processMeeting, ReadAIMeeting } from "./meeting-processor.js";
 
 const app = express();
 app.use(express.json());
@@ -19,19 +19,28 @@ app.get("/webhooks/read-ai", (req, res) => {
 app.post("/webhooks/read-ai", async (req, res) => {
   console.log("[Webhook] Received POST request from Read AI");
   console.log("[Webhook] Payload:", JSON.stringify(req.body, null, 2));
-  
+
   try {
-    const meetingData = req.body;
-    
-    // Read AI webhook structure usually contains the report in the body
-    if (!meetingData || !meetingData.id) {
-      console.warn("[Webhook] Potential test request or invalid payload (No ID)");
-      return res.status(200).send("Webhook endpoint reachable (Test/Handshake OK)");
+    const meetingData = req.body as ReadAIMeeting | undefined;
+    if (!meetingData) {
+      console.warn("[Webhook] Payload missing body");
+      return res.status(202).send("Webhook reachable but no data received.");
     }
 
-    // Process meeting in the background (or await if you want to respond later, 
-    // but webhooks usually require fast response)
-    processMeeting(meetingData).catch(err => {
+    const normalizedId =
+      meetingData.id ||
+      meetingData.session_id ||
+      meetingData.platform_meeting_id ||
+      meetingData.report_url;
+
+    if (!normalizedId) {
+      console.warn("[Webhook] Payload missing id/session_id/platform_meeting_id");
+      return res.status(202).send("Webhook reachable but payload missing identifiers.");
+    }
+
+    meetingData.id = normalizedId;
+
+    processMeeting(meetingData).catch((err) => {
       console.error("[Webhook] Error in background processing:", err);
     });
 
