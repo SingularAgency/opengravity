@@ -1,4 +1,4 @@
-import { queryAirtableRecords } from "../../services/airtable.js";
+import { describeAirtableTable, getAirtableSchema, queryAirtableRecords } from "../../services/airtable.js";
 import { UserFacingError } from "../../utils/user-facing-error.js";
 
 export const airtableQueryDef = {
@@ -40,6 +40,23 @@ export const airtableQueryDef = {
   },
 };
 
+export const airtableListSchemaDef = {
+  type: "function" as const,
+  function: {
+    name: "airtable_list_schema",
+    description: "List tables and fields available in the configured Airtable base.",
+    parameters: {
+      type: "object",
+      properties: {
+        base_id: {
+          type: "string",
+          description: "Optional Airtable base ID. Defaults to the configured base.",
+        },
+      },
+    },
+  },
+};
+
 export const airtableQueryFn = async (args: {
   table: string;
   base_id?: string;
@@ -52,19 +69,64 @@ export const airtableQueryFn = async (args: {
     throw new UserFacingError("Debes indicar la tabla de Airtable que quieres consultar.");
   }
 
-  const response = await queryAirtableRecords({
-    table: args.table,
-    baseId: args.base_id,
-    maxRecords: args.max_records ?? 5,
-    view: args.view,
-    filterByFormula: args.filter_formula,
-    fields: args.fields,
-  });
+  try {
+    const response = await queryAirtableRecords({
+      table: args.table,
+      baseId: args.base_id,
+      maxRecords: args.max_records ?? 5,
+      view: args.view,
+      filterByFormula: args.filter_formula,
+      fields: args.fields,
+    });
 
-  if (!response.records || response.records.length === 0) {
-    return `No se encontraron registros en la tabla ${args.table}.`;
+    return formatAirtableRecords(response, args.table);
+  } catch (error: any) {
+    if (
+      error instanceof UserFacingError &&
+      error.details?.includes("Campos disponibles") &&
+      args.fields &&
+      args.fields.length > 0
+    ) {
+      const schema = await describeAirtableTable(args.table, args.base_id);
+      const fallbackResponse = await queryAirtableRecords({
+        table: args.table,
+        baseId: args.base_id,
+        maxRecords: args.max_records ?? 5,
+        view: args.view,
+        filterByFormula: args.filter_formula,
+      });
+      const schemaFields =
+        schema?.fields.map((f) => `• ${f.name} (${f.type})`).join("\n") ||
+        error.details;
+      return `${error.toUserMessage()}\nCampos disponibles:\n${schemaFields}\n\nMostrando los registros sin filtrar campos:\n${formatAirtableRecords(
+        fallbackResponse,
+        args.table
+      )}`;
+    }
+    throw error;
+  }
+};
+
+export const airtableListSchemaFn = async (args: { base_id?: string } = {}) => {
+  const tables = await getAirtableSchema(args.base_id);
+  if (tables.length === 0) {
+    return "No encontré tablas disponibles en esa base.";
   }
 
+  const summary = tables
+    .map((table) => {
+      const fields = table.fields.map((f) => `${f.name} (${f.type})`).join(", ");
+      return `• ${table.name} [${table.id}] → ${fields}`;
+    })
+    .join("\n");
+
+  return `Esquema de Airtable:\n${summary}`;
+};
+
+function formatAirtableRecords(response: { records?: { id: string; fields: Record<string, any> }[] }, table: string) {
+  if (!response.records || response.records.length === 0) {
+    return `No se encontraron registros en la tabla ${table}.`;
+  }
   const summary = response.records
     .map((record) => {
       const preview = Object.entries(record.fields)
@@ -75,8 +137,8 @@ export const airtableQueryFn = async (args: {
     })
     .join("\n");
 
-  return `Resultados de Airtable (${args.table}):\n${summary}`;
-};
+  return `Resultados de Airtable (${table}):\n${summary}`;
+}
 
 function formatValue(value: any): string {
   if (value === null || value === undefined) return "";
