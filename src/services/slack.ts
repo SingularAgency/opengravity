@@ -1,11 +1,44 @@
 import { WebClient } from "@slack/web-api";
 import { env } from "../config/env.js";
+import { UserFacingError } from "../utils/user-facing-error.js";
 
 type SlackChannelSummary = {
   id?: string;
   name?: string;
   is_private?: boolean;
 };
+
+function buildSlackError(
+  action: string,
+  err: any,
+  extras?: string
+): UserFacingError {
+  const slackErrorCode = err?.data?.error || err?.code;
+  let message = `${action} falló`;
+  if (slackErrorCode) {
+    message += ` (Slack: ${slackErrorCode})`;
+  }
+  const suggestions: string[] = [];
+  switch (slackErrorCode) {
+    case "not_authed":
+    case "invalid_auth":
+      suggestions.push("Revisa SLACK_BOT_TOKEN y reinstala la app en tu workspace.");
+      break;
+    case "not_in_channel":
+      suggestions.push("Invita al bot al canal con /invite @TuBot.");
+      break;
+    case "channel_not_found":
+      suggestions.push("Verifica el nombre o ID del canal y que el bot tenga acceso.");
+      break;
+  }
+  if (extras) suggestions.push(extras);
+  if (suggestions.length > 0) {
+    message += `. Sugerencias: ${suggestions.join(" ")}`;
+  }
+  return new UserFacingError(message, {
+    details: slackErrorCode || err?.message,
+  });
+}
 
 export class SlackService {
   private client: WebClient;
@@ -45,7 +78,11 @@ export class SlackService {
       }));
     } catch (error) {
       console.error("[SlackService] Error listing channels:", error);
-      throw new Error("Failed to list Slack channels.");
+      throw buildSlackError(
+        "No pude listar los canales",
+        error,
+        "Asegúrate de que el bot esté instalado y tenga permisos channels:read."
+      );
     }
   }
 
@@ -115,7 +152,11 @@ export class SlackService {
       };
     } catch (error) {
       console.error(`[SlackService] Error fetching history for channel ${channelIdentifier}:`, error);
-      throw new Error("Failed to fetch Slack message history.");
+      throw buildSlackError(
+        `No pude leer el historial de ${channelIdentifier}`,
+        error,
+        "Confirma que el bot fue invitado y que proporcionaste el nombre o ID correctos."
+      );
     }
   }
 }

@@ -1,4 +1,5 @@
 import { queryAirtableRecords } from "../../services/airtable.js";
+import { UserFacingError } from "../../utils/user-facing-error.js";
 
 export const airtableQueryDef = {
   type: "function" as const,
@@ -47,34 +48,34 @@ export const airtableQueryFn = async (args: {
   filter_formula?: string;
   fields?: string[];
 }) => {
-  try {
-    const response = await queryAirtableRecords({
-      table: args.table,
-      baseId: args.base_id,
-      maxRecords: args.max_records ?? 5,
-      view: args.view,
-      filterByFormula: args.filter_formula,
-      fields: args.fields,
-    });
-
-    if (!response.records || response.records.length === 0) {
-      return `No se encontraron registros en la tabla ${args.table}.`;
-    }
-
-    const summary = response.records
-      .map((record) => {
-        const preview = Object.entries(record.fields)
-          .map(([key, value]) => `${key}: ${formatValue(value)}`)
-          .slice(0, 6)
-          .join(" | ");
-        return `• (${record.id}) ${preview}`;
-      })
-      .join("\n");
-
-    return `Resultados de Airtable (${args.table}):\n${summary}`;
-  } catch (error: any) {
-    return `Error consultando Airtable: ${error.message}`;
+  if (!args.table) {
+    throw new UserFacingError("Debes indicar la tabla de Airtable que quieres consultar.");
   }
+
+  const response = await queryAirtableRecords({
+    table: args.table,
+    baseId: args.base_id,
+    maxRecords: args.max_records ?? 5,
+    view: args.view,
+    filterByFormula: args.filter_formula,
+    fields: args.fields,
+  });
+
+  if (!response.records || response.records.length === 0) {
+    return `No se encontraron registros en la tabla ${args.table}.`;
+  }
+
+  const summary = response.records
+    .map((record) => {
+      const preview = Object.entries(record.fields)
+        .map(([key, value]) => `${key}: ${formatValue(value)}`)
+        .slice(0, 6)
+        .join(" | ");
+      return `• (${record.id}) ${preview}`;
+    })
+    .join("\n");
+
+  return `Resultados de Airtable (${args.table}):\n${summary}`;
 };
 
 function formatValue(value: any): string {

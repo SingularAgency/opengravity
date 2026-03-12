@@ -1,4 +1,5 @@
 import { env } from "../config/env.js";
+import { UserFacingError } from "../utils/user-facing-error.js";
 
 const AIRTABLE_API_URL = "https://api.airtable.com/v0";
 
@@ -25,10 +26,14 @@ interface AirtableResponse {
 
 function ensureCredentials(baseId?: string) {
   if (!env.AIRTABLE_API_KEY) {
-    throw new Error("AIRTABLE_API_KEY is not configured");
+    throw new UserFacingError("Airtable no está configurado.", {
+      hint: "Agrega AIRTABLE_API_KEY en tu archivo .env o panel.",
+    });
   }
   if (!baseId && !env.AIRTABLE_BASE_ID) {
-    throw new Error("AIRTABLE_BASE_ID is not configured");
+    throw new UserFacingError("Falta el ID de la base de Airtable.", {
+      hint: "Define AIRTABLE_BASE_ID por defecto o pásalo en la herramienta.",
+    });
   }
 }
 
@@ -63,7 +68,10 @@ export async function queryAirtableRecords(options: AirtableQueryOptions) {
 
   if (!response.ok) {
     const errorText = await response.text();
-    throw new Error(`Airtable Error (${response.status}): ${errorText}`);
+    throw new UserFacingError("No pude obtener datos de Airtable.", {
+      details: `HTTP ${response.status}: ${errorText}`,
+      hint: "Verifica el token, la base y los permisos del PAT.",
+    });
   }
 
   const data = (await response.json()) as AirtableResponse;

@@ -1,4 +1,5 @@
 import { slackService } from "../../services/slack.js";
+import { UserFacingError } from "../../utils/user-facing-error.js";
 
 // Tool definitions
 export const slackListChannelsDef = {
@@ -44,35 +45,29 @@ export const slackReadMessagesDef = {
 
 // Tool execution functions
 export const slackListChannelsFn = async () => {
-  try {
-    const channels = await slackService.listChannels();
-    if (channels.length === 0) {
-      return "No Slack channels found or the bot hasn't been added to any.";
-    }
-    const channelList = channels
-      .map((c) => `- ${c.name} (ID: ${c.id})${c.is_private ? " [PRIVATE]" : ""}`)
-      .join("\n");
-    return `Available Slack Channels:\n${channelList}`;
-  } catch (error: any) {
-    return `Error listing Slack channels: ${error.message}`;
+  const channels = await slackService.listChannels();
+  if (channels.length === 0) {
+    throw new UserFacingError("No encontré canales de Slack disponibles.", {
+      hint: "Invita al bot a algún canal o revisa sus permisos.",
+    });
   }
+  const channelList = channels
+    .map((c) => `- ${c.name} (ID: ${c.id})${c.is_private ? " [PRIVATE]" : ""}`)
+    .join("\n");
+  return `Available Slack Channels:\n${channelList}`;
 };
 
 export const slackReadMessagesFn = async (args: { channel_id?: string; channel_name?: string; limit?: number }) => {
-  try {
-    const identifier = args.channel_id || args.channel_name;
-    if (!identifier) {
-      return "Debes indicar un channel_id o channel_name para leer mensajes.";
-    }
-
-    const history = await slackService.getChannelHistory(identifier, args.limit);
-    if (history.messages.length === 0) {
-      return "No messages found in this channel.";
-    }
-    const formattedMessages = history.messages.map((m) => `[${m.user}]: ${m.text}`).join("\n");
-    const channelLabel = history.channelName ? `${history.channelName} (${history.channelId})` : history.channelId;
-    return `Recent messages in channel ${channelLabel}:\n${formattedMessages}`;
-  } catch (error: any) {
-    return `Error reading Slack messages: ${error.message}`;
+  const identifier = args.channel_id || args.channel_name;
+  if (!identifier) {
+    throw new UserFacingError("Debes indicar un channel_id o channel_name para leer mensajes.");
   }
+
+  const history = await slackService.getChannelHistory(identifier, args.limit);
+  if (history.messages.length === 0) {
+    return "No se encontraron mensajes recientes en ese canal.";
+  }
+  const formattedMessages = history.messages.map((m) => `[${m.user}]: ${m.text}`).join("\n");
+  const channelLabel = history.channelName ? `${history.channelName} (${history.channelId})` : history.channelId;
+  return `Recent messages in channel ${channelLabel}:\n${formattedMessages}`;
 };

@@ -1,6 +1,7 @@
 import { getMessages, addMessage } from "../memory/db.js";
 import { generateResponse } from "./llm.js";
 import { toolsExecutor } from "./tools/index.js";
+import { formatUserFacingError } from "../utils/user-facing-error.js";
 
 const SYSTEM_PROMPT = `You are OpenGravity, a personal AI assistant.
 You have access to tools, including Google Workspace (Gmail, Calendar) and Skill Discovery.
@@ -112,7 +113,10 @@ export async function runAgentLoop(
             resultText = `Error: Tool ${functionName} not found.`;
           }
         } catch (err: any) {
-          resultText = `Error calling tool ${functionName}: ${err.message}`;
+          resultText = formatUserFacingError(
+            `No pude completar la acción ${functionName}`,
+            err
+          );
         }
 
         console.log(`[Agent] Tool result: ${resultText}`);
